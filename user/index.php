@@ -118,13 +118,17 @@ if ($roleid) {
 // Default group ID.
 $groupid = false;
 $canaccessallgroups = has_capability('moodle/site:accessallgroups', $context);
-if ($course->groupmode != NOGROUPS) {
-    if ($canaccessallgroups) {
-        // Change the group if the user can access all groups and has specified group in the URL.
-        if ($groupparam) {
-            $groupid = $groupparam;
-        }
+if ($groupparam) {
+    if ($course->groupmode == SEPARATEGROUPS && !groups_is_member($groupparam) && !$canaccessallgroups) {
+        // If group param is set and user is not member of a separate group or the user has not access to all groups.
+        echo $OUTPUT->notification(get_string('groupnotamember'));
+        echo $OUTPUT->footer();
+        exit;
     } else {
+        // Otherwise, change the group to the specified group in the URL.
+        $groupid = $groupparam;
+    }
+} else {
         // Otherwise, get the user's default group.
         $groupid = groups_get_course_group($course, true);
         if ($course->groupmode == SEPARATEGROUPS && !$groupid) {
@@ -133,7 +137,6 @@ if ($course->groupmode != NOGROUPS) {
             echo $OUTPUT->footer();
             exit;
         }
-    }
 }
 $hasgroupfilter = false;
 $lastaccess = 0;
